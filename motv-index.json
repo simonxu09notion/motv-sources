@@ -1,11 +1,46 @@
 {
   "index_version": 2,
-  "updated": "2026-10-16",
+  "updated": "2026-10-17",
   "sources": [
     {
       "name": "欧歌",
       "url": "http://azai1314.top/jk/%E6%AC%A7%E6%AD%8C/",
       "desc": "49 站点(type=3 csp) + 8 直播；地址必须带尾部斜杠；2026-10-16 实测 HTTP 200"
+    },
+    {
+      "name": "💞黑色影视💞",
+      "url": "https://raw.githubusercontent.com/hebijunge/tvbox-config/main/tvbox_recommended.json",
+      "desc": "type=1；2026-10-17 验证通过(达 stage 4)；延迟 4921ms；1630 站点"
+    },
+    {
+      "name": "1-艾旦",
+      "url": "https://github.com/anaer/Meow/raw/main/meow.json",
+      "desc": "type=1；2026-10-17 验证通过(达 stage 4)；延迟 11172ms；77 站点"
+    },
+    {
+      "name": "🎬首页｜热播",
+      "url": "https://raw.githubusercontent.com/mrgaoshuiquan/tvbox-config/main/tvbox.json",
+      "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 35ms；52 站点"
+    },
+    {
+      "name": "搜索 | 豆瓣[js]",
+      "url": "https://raw.githubusercontent.com/qist/tvbox/master/js.json",
+      "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 49ms；298 站点"
+    },
+    {
+      "name": "豆豆┃片单 <修复漫剧、海绵>",
+      "url": "https://raw.githubusercontent.com/qist/tvbox/master/fty.json",
+      "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 68ms；49 站点"
+    },
+    {
+      "name": "AI剧",
+      "url": "https://raw.githubusercontent.com/hkuc/public/main/box/ai.json",
+      "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 85ms；1 站点"
+    },
+    {
+      "name": "搜索 | 豆瓣[js]",
+      "url": "https://github.com/gaotianliuyun/gao/raw/master/js.json",
+      "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 100ms；298 站点"
     }
   ]
 }
