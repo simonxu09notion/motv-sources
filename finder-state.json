@@ -6,17 +6,20 @@
     "https://raw.githubusercontent.com/hebijunge/tvbox-config/main/tvbox_recommended.json",
     "https://github.com/anaer/Meow/raw/main/meow.json",
     "https://raw.githubusercontent.com/mrgaoshuiquan/tvbox-config/main/tvbox.json",
-    "https://raw.githubusercontent.com/qist/tvbox/master/js.json",
     "https://raw.githubusercontent.com/qist/tvbox/master/fty.json",
     "https://raw.githubusercontent.com/hkuc/public/main/box/ai.json",
-    "https://github.com/gaotianliuyun/gao/raw/master/js.json"
+    "https://github.com/Dong-learn9/TVBox-zyjk/raw/main/tvbox2.json",
+    "https://github.com/gaotianliuyun/gao/raw/master/0826.json"
   ],
   "lastRun": "2026-10-17",
   "lastCounts": {
     "kept": 8,
-    "added": 7,
-    "removed": 0,
-    "targetCount": 8
+    "added": 2,
+    "removed": 2,
+    "targetCount": 8,
+    "removeNames": [
+      "豆瓣"
+    ]
   },
-  "note": "protected=手动维护、失效也不自动剔除(按 name 匹配)；其余源失效自动剔除，少于 N 从 tools/seeds.json 候选池补足。可在对话里说「保护 X / 取消保护 X」维护。"
+  "note": "protected=手动维护、失效也不自动剔除(按 name 匹配)；其余源失效自动剔除，少于 N 从 tools/seeds.json 候选池补足。可在对话里说「保护 X / 取消保护 X」维护；删除可在 Run workflow 的 remove_names 填名字。"
 }
