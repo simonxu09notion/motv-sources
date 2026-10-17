@@ -1,0 +1,19 @@
+{
+  "seeds": [
+    {
+      "type": "index",
+      "name": "我的 motv-index",
+      "url": "https://raw.githubusercontent.com/simonxu09notion/motv-sources/main/motv-index.json"
+    },
+    { "type": "raw", "name": "mrgaoshuiquan 剧荒克星", "url": "https://raw.githubusercontent.com/mrgaoshuiquan/tvbox-config/main/tvbox.json" },
+    { "type": "raw", "name": "qist-电视", "url": "https://raw.githubusercontent.com/qist/tvbox/master/dianshi.json" },
+    { "type": "raw", "name": "qist-FTY", "url": "https://raw.githubusercontent.com/qist/tvbox/master/fty.json" },
+    { "type": "raw", "name": "qist-JS", "url": "https://raw.githubusercontent.com/qist/tvbox/master/js.json" },
+    { "type": "raw", "name": "qist-JSM", "url": "https://raw.githubusercontent.com/qist/tvbox/master/jsm.json" },
+    { "type": "raw", "name": "qist-XYQ", "url": "https://raw.githubusercontent.com/qist/tvbox/master/XYQ.json" },
+    { "type": "raw", "name": "hebijunge 推荐", "url": "https://raw.githubusercontent.com/hebijunge/tvbox-config/main/tvbox_recommended.json" },
+    { "type": "index", "name": "Lightconer 源列表", "url": "https://raw.githubusercontent.com/Lightconer/tvbox-ysc-config/main/config/sources.json" },
+    { "type": "index", "name": "hkuc URL 列表", "url": "https://raw.githubusercontent.com/hkuc/tvbox-config/main/url.json" }
+  ],
+  "_说明": "type: index(解析聚合源列表/索引，抽取其中所有配置URL) / raw(单个主配置URL，整体作为一个源验证) / links(抓取页面抽取URL) / github(需 discovery.githubEnabled+githubToken)。GitHub 连接器已探到以下真实仓库并写入：mrgaoshuiquan/tvbox-config、qist/tvbox、hebijunge/tvbox-config、Lightconer/tvbox-ysc-config(config/sources.json 聚合了肥猫/饭太硬/老刘备等)、hkuc/tvbox-config(url.json 聚合 heroaku 系列)。工具在你本机逐一验证；本沙箱因网络限流可能部分拉不到，属正常。"
+}

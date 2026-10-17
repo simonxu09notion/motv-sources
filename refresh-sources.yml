@@ -1,0 +1,54 @@
+name: motv source refresh
+
+# 每月 1 日 10:00（北京时间 = UTC 02:00）自动刷新 TVBox 源
+# 也可在仓库 Actions 页 → 左侧 "motv source refresh" → "Run workflow" 手动触发
+on:
+  schedule:
+    - cron: "0 2 1 * *"
+  workflow_dispatch:
+    inputs:
+      target_count:
+        description: "保持的可用源数量 N（默认 8）"
+        default: "8"
+        required: false
+
+# 防止定时运行与手动运行撞车（串行执行，不取消）
+concurrency:
+  group: motv-source-refresh
+  cancel-in-progress: false
+
+# 必须显式声明：新版 GitHub Actions 默认只读，无写权限无法 push
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Refresh sources (verify → prune → top-up)
+        env:
+          TARGET_COUNT: ${{ github.event.inputs.target_count || '8' }}
+        run: node tools/refresh-sources.mjs
+
+      - name: Commit & push
+        run: |
+          git config user.name "motv-source-bot"
+          git config user.email "motv-source-bot@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes, nothing to push"
+          else
+            git commit -m "chore(motv): source refresh $(date -u +%Y-%m-%d)"
+            git push
+            echo "pushed"
+          fi

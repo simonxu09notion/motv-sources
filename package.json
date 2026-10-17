@@ -1,0 +1,7 @@
+{
+  "name": "motv-source-refresh-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "motv-index 月度自动刷新引擎（GitHub Actions 版，零依赖）"
+}
