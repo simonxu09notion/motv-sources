@@ -8,8 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       target_count:
-        description: "保持的可用源数量 N（默认 8）"
+        description: "保持的可用源数量 N（默认 8；少于 N 自动补足，可填任意数）"
         default: "8"
+        required: false
+      remove_names:
+        description: "要删除的源（名字或URL，逗号分隔；删除后若不足 N 会自动补足。留空=不删）"
         required: false
 
 # 防止定时运行与手动运行撞车（串行执行，不取消）
@@ -35,9 +38,10 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Refresh sources (verify → prune → top-up)
+      - name: Refresh sources (verify → remove/prune → top-up)
         env:
           TARGET_COUNT: ${{ github.event.inputs.target_count || '8' }}
+          REMOVE_NAMES: ${{ github.event.inputs.remove_names }}
         run: node tools/refresh-sources.mjs
 
       - name: Commit & push
