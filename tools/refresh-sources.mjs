@@ -206,6 +206,50 @@ function originOf(url) {
   }
 }
 
+function hostOf(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
+// 图片封装配置识别（饭太硬专用形态）：
+// 响应是 JPEG/PNG 图片，TVBox JSON 配置经 base64 后隐写在图片尾部（EOI/IEND 之后），
+// 且 JSON 带 // 行注释（严格 JSON.parse 会失败）。提取后返回配置对象，失败返回 null。
+function extractImageWrappedConfig(buf) {
+  try {
+    const isJpeg = buf[0] === 0xff && buf[1] === 0xd8;
+    const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+    if (!isJpeg && !isPng) return null;
+    let hidden = "";
+    if (isJpeg) {
+      const eoi = buf.lastIndexOf(Buffer.from([0xff, 0xd9])); // JPEG EOI
+      if (eoi < 0) return null;
+      hidden = buf.slice(eoi + 2).toString("utf8").trim();
+    } else {
+      const iend = buf.lastIndexOf(Buffer.from([0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82])); // PNG IEND
+      if (iend < 0) return null;
+      hidden = buf.slice(iend + 8).toString("utf8").trim();
+    }
+    if (hidden.length < 32) return null;
+    const decoded = Buffer.from(hidden, "base64").toString("utf8");
+    const start = decoded.indexOf("{");
+    if (start < 0) return null;
+    const cleaned = decoded
+      .slice(start)
+      .replace(/^\s*\/\/.*$/gm, "") // 去整行注释
+      .replace(/,(\s*[}\]])/g, "$1"); // 去尾随逗号
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+}
+
 // type=1：分类 → 片单 → 详情 → 播放流，全跑
 async function validateApiFull(a) {
   const r = { api: a.api, type: a.type, stage: 1, ok: false, samplePlayUrl: null, needsHeaders: null, classes: [], error: null };
@@ -358,8 +402,12 @@ async function validateConfig(url) {
   };
   const t0 = Date.now();
   let text;
+  let rawBuf = null;
   try {
-    text = await fetchText(url);
+    const resp = await fetchTimeout(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    rawBuf = Buffer.from(await resp.arrayBuffer());
+    text = rawBuf.toString("utf8");
   } catch (e) {
     v.error = "结构校验失败: " + e.message;
     v.latencyMs = Date.now() - t0;
@@ -370,14 +418,19 @@ async function validateConfig(url) {
   try {
     cfgJson = JSON.parse(text);
   } catch {
-    v.error = "非 JSON 配置";
-    v.latencyMs = Date.now() - t0;
-    return v;
+    // 图片封装配置（饭太硬形态：图片尾部 base64 隐写 JSON）
+    if (rawBuf) cfgJson = extractImageWrappedConfig(rawBuf);
+    if (!cfgJson) {
+      v.error = "非 JSON 配置";
+      v.latencyMs = Date.now() - t0;
+      return v;
+    }
+    v.imageWrapped = true;
   }
 
   const sites = Array.isArray(cfgJson.sites) ? cfgJson.sites : [];
   v.siteCount = sites.length;
-  v.name = cfgJson.name || (sites[0] && sites[0].name) || extractName(url);
+  v.name = cfgJson.name || (sites[0] && sites[0].name) || hostOf(url) || extractName(url);
 
   const apis = [];
   if (cfgJson.api) apis.push({ api: cfgJson.api, type: cfgJson.type ?? 1 });
@@ -434,6 +487,7 @@ async function validateConfig(url) {
 function buildDesc(r) {
   const parts = [`type=${r.type ?? "?"}`];
   parts.push(`${today()} 验证通过(达 stage ${r.stage})`);
+  if (r.imageWrapped) parts.push("图片封装配置");
   if (r.latencyMs) parts.push(`延迟 ${r.latencyMs}ms`);
   parts.push(`${r.siteCount ?? "?"} 站点`);
   if (r.needsHeaders && r.needsHeaders.referer) parts.push("需 Referer");
