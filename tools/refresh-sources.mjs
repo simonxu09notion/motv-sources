@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 /**
- * motv-index 月度自动刷新引擎（GitHub Actions 版，零依赖）
+ * motv-index 自动刷新引擎（GitHub Actions 版，零依赖）v2
  * ------------------------------------------------------------------
  * 运行环境：GitHub Actions ubuntu-latest + Node 20（原生 fetch，无需 npm install）
  * 触发方式：每月 1 日 10:00（北京时间）定时 + 仓库 Actions 页手动 Run workflow
  *
+ * 手动触发输入（Actions → Run workflow 填写）：
+ *   - target_count ：保持的可用源数量 N（少于 N 自动补足，默认 8，上限 200）
+ *   - remove_names ：要删除的源（名字或 URL，逗号分隔；命中即删，删除后不足 N 会自动补足）
+ *
  * 流程：
  *   1) 读仓库根 motv-index.json（APK 订阅的文件）
  *   2) 逐条复验现有源：结构 → 列表/详情 → 播放流探测（慢更准，type=3 只做结构级）
- *   3) 剔除失效源（protected 保护名单除外，保护源失效仅警告不剔除）
+ *   3) 剔除：① remove_names 指定删除（用户指令，优先于保护名单）；② 失效且非保护源
  *   4) 可用源少于 N 时，从 tools/seeds.json 候选池择优补足到 N
  *   5) 写回 motv-index.json + finder-state.json（git push 由 workflow 负责）
  *
@@ -29,14 +33,15 @@ const STATE_PATH = join(ROOT, "finder-state.json");
 const SEEDS_PATH = join(TOOLS_DIR, "seeds.json");
 const SUMMARY_PATH = process.env.GITHUB_STEP_SUMMARY || "";
 
-const TARGET_COUNT = clampInt(process.env.TARGET_COUNT, 8, 1, 50);
+const TARGET_COUNT = clampInt(process.env.TARGET_COUNT, 8, 1, 200);
+const REMOVE_NAMES = parseNames(process.env.REMOVE_NAMES || "");
 const UA =
   "Mozilla/5.0 (Linux; Android 12; SM-S9110) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 const CONCURRENCY = 4;
 const FETCH_TIMEOUT_MS = 15000;
 const PROBE_TIMEOUT_MS = 15000;
 const RETRIES = 1;
-const MAX_CANDIDATES = 80; // 候选池单轮验证上限，防索引聚合出几百个跑不完
+const MAX_CANDIDATES = 300; // 候选池单轮验证上限（支持补到大数量）
 
 // ---------------- 基础工具 ----------------
 
@@ -44,6 +49,36 @@ function clampInt(v, dflt, min, max) {
   const n = parseInt(v, 10);
   if (!Number.isFinite(n)) return dflt;
   return Math.min(max, Math.max(min, n));
+}
+
+// 解析 remove_names：支持中英文逗号/分号/换行分隔
+function parseNames(raw) {
+  return String(raw)
+    .split(/[,，;；\n\r]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// 名称归一化：去空白和所有符号（括号/竖线等），用于宽松匹配
+// 用户说"豆瓣js"可命中 "搜索 | 豆瓣[js]"
+function normName(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/[\s\u3000]/g, "")
+    .replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+// 判断一个源是否命中用户的删除指令（按名字包含匹配，或按 URL 匹配）
+function matchRemove(source, kws) {
+  if (!kws.length) return false;
+  const nName = normName(source.name);
+  const nUrl = normName(source.url);
+  return kws.some((k) => {
+    const nk = normName(k);
+    if (!nk) return false;
+    if (/^https?:\/\//i.test(k)) return nUrl === nk || nUrl.includes(nk);
+    return nName.length > 0 && nName.includes(nk);
+  });
 }
 
 function today() {
@@ -471,15 +506,17 @@ function appendSummary(md) {
   } catch {}
 }
 
-function writeSummary({ total, target, added, removed, protectedDead, date }) {
+function writeSummary({ total, target, added, removed, protectedDead, date, removeKw }) {
   const lines = [];
   lines.push(`## motv 源刷新报告（${date}）`);
+  lines.push("");
+  if (removeKw && removeKw.length) lines.push(`本次指定删除：${removeKw.join("、")}`);
   lines.push("");
   lines.push(`| 指标 | 值 |`);
   lines.push(`| --- | --- |`);
   lines.push(`| 最终可用源 | **${total}** / 目标 ${target} |`);
   lines.push(`| 新增 | ${added.length} |`);
-  lines.push(`| 剔除（失效） | ${removed.length} |`);
+  lines.push(`| 剔除（失效+指定删除） | ${removed.length} |`);
   lines.push(`| 保护源失效警告 | ${protectedDead.length} |`);
   lines.push("");
   if (added.length) {
@@ -488,7 +525,7 @@ function writeSummary({ total, target, added, removed, protectedDead, date }) {
     lines.push("");
   }
   if (removed.length) {
-    lines.push(`### 剔除（失效源）`);
+    lines.push(`### 剔除`);
     for (const r of removed) lines.push(`- ${r.name} — ${r.reason}`);
     lines.push("");
   }
@@ -504,6 +541,7 @@ function writeSummary({ total, target, added, removed, protectedDead, date }) {
 
 async function main() {
   log(`[motv-refresh] ${today()} 目标 N=${TARGET_COUNT} 并发=${CONCURRENCY} 超时=${FETCH_TIMEOUT_MS}ms`);
+  if (REMOVE_NAMES.length) log(`[motv-refresh] 指定删除: ${REMOVE_NAMES.join(" / ")}`);
 
   const index = loadJson(INDEX_PATH, { index_version: 2, updated: today(), sources: [] });
   const state = loadJson(STATE_PATH, {});
@@ -522,7 +560,11 @@ async function main() {
   for (const s of existing) {
     const r = resByUrl.get(s.url);
     const ok = !!(r && r.ok);
-    if (ok) {
+    if (matchRemove(s, REMOVE_NAMES)) {
+      // 用户指定删除：优先于一切规则（含保护名单）
+      removed.push({ name: s.name || s.url, url: s.url, reason: "用户指定删除" });
+      log(`[motv-refresh] 指定删除: ${s.name} (${s.url})`);
+    } else if (ok) {
       kept.push({ name: s.name, url: s.url, desc: s.desc || "" });
     } else if (protectedNames.has(s.name)) {
       kept.push({ name: s.name, url: s.url, desc: `${s.desc || ""} [${today()} 失效警告]`.trim() });
@@ -540,7 +582,10 @@ async function main() {
     log(`[motv-refresh] 可用源不足，需补 ${need} 条，展开候选池...`);
     const candidates = await expandCandidates();
     const existingUrls = new Set(existing.map((s) => s.url));
-    const fresh = candidates.filter((c) => !existingUrls.has(c.url)).slice(0, MAX_CANDIDATES);
+    const removedUrls = new Set(removed.map((r) => r.url));
+    const fresh = candidates
+      .filter((c) => !existingUrls.has(c.url) && !removedUrls.has(c.url) && !matchRemove(c, REMOVE_NAMES))
+      .slice(0, MAX_CANDIDATES);
     log(`[motv-refresh] 候选 ${fresh.length} 个，验证中...`);
     const vres = await mapLimit(fresh, CONCURRENCY, (c) => validateConfig(c.url));
     const good = vres
@@ -567,14 +612,14 @@ async function main() {
     protected: [...protectedNames],
     managedUrls: kept.filter((s) => !protectedNames.has(s.name)).map((s) => s.url),
     lastRun: today(),
-    lastCounts: { kept: kept.length, added: added.length, removed: removed.length, targetCount: TARGET_COUNT },
+    lastCounts: { kept: kept.length, added: added.length, removed: removed.length, targetCount: TARGET_COUNT, removeNames: REMOVE_NAMES },
     note:
-      "protected=手动维护、失效也不自动剔除(按 name 匹配)；其余源失效自动剔除，少于 N 从 tools/seeds.json 候选池补足。可在对话里说「保护 X / 取消保护 X」维护。",
+      "protected=手动维护、失效也不自动剔除(按 name 匹配)；其余源失效自动剔除，少于 N 从 tools/seeds.json 候选池补足。可在对话里说「保护 X / 取消保护 X」维护；删除可在 Run workflow 的 remove_names 填名字。",
   };
   writeFileSync(STATE_PATH, JSON.stringify(newState, null, 2) + "\n", "utf-8");
 
   // 4) 汇报
-  writeSummary({ total: kept.length, target: TARGET_COUNT, added, removed, protectedDead, date: today() });
+  writeSummary({ total: kept.length, target: TARGET_COUNT, added, removed, protectedDead, date: today(), removeKw: REMOVE_NAMES });
   log(`[motv-refresh] 完成：最终 ${kept.length} 条（新增 ${added.length} / 剔除 ${removed.length}）`);
 }
 
