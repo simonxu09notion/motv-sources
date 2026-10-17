@@ -8,17 +8,17 @@
     "https://raw.githubusercontent.com/mrgaoshuiquan/tvbox-config/main/tvbox.json",
     "https://raw.githubusercontent.com/qist/tvbox/master/fty.json",
     "https://raw.githubusercontent.com/hkuc/public/main/box/ai.json",
-    "https://github.com/Dong-learn9/TVBox-zyjk/raw/main/tvbox2.json",
-    "https://github.com/gaotianliuyun/gao/raw/master/0826.json"
+    "https://github.com/gaotianliuyun/gao/raw/master/0826.json",
+    "http://肥猫.net/tv"
   ],
   "lastRun": "2026-10-17",
   "lastCounts": {
     "kept": 8,
-    "added": 2,
+    "added": 0,
     "removed": 2,
     "targetCount": 8,
     "removeNames": [
-      "豆瓣"
+      "豆瓣js"
     ]
   },
   "note": "protected=手动维护、失效也不自动剔除(按 name 匹配)；其余源失效自动剔除，少于 N 从 tools/seeds.json 候选池补足。可在对话里说「保护 X / 取消保护 X」维护；删除可在 Run workflow 的 remove_names 填名字。"

@@ -33,19 +33,9 @@
       "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 85ms；1 站点"
     },
     {
-      "name": "豆瓣┃[js]",
-      "url": "https://github.com/Dong-learn9/TVBox-zyjk/raw/main/tvbox2.json",
-      "desc": "type=1；2026-10-17 验证通过(达 stage 4)；延迟 2974ms；43 站点"
-    },
-    {
       "name": "备用公众号【叨观荐影】",
       "url": "https://github.com/gaotianliuyun/gao/raw/master/0826.json",
       "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 150ms；51 站点"
-    },
-    {
-      "name": "饭太硬",
-      "url": "http://www.饭太硬.net/tv",
-      "desc": "type=3；2026-10-17 验证通过(图片封装配置，解码后 49 站点)；延迟 551ms；HTTP 200"
     },
     {
       "name": "肥猫",
