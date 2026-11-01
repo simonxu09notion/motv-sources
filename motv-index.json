@@ -1,6 +1,6 @@
 {
   "index_version": 2,
-  "updated": "2026-10-17",
+  "updated": "2026-11-01",
   "sources": [
     {
       "name": "欧歌",
@@ -13,19 +13,9 @@
       "desc": "type=1；2026-10-17 验证通过(达 stage 4)；延迟 4921ms；1630 站点"
     },
     {
-      "name": "宝盒",
-      "url": "http://宝盒接口.top",
-      "desc": "type=1；2026-10-17 验证通过(达 stage 4)；延迟 11172ms；77 站点"
-    },
-    {
       "name": "BCY",
       "url": "https://0.wudaozhe.net/5/x4all.json",
       "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 35ms；52 站点"
-    },
-    {
-      "name": "高天流云",
-      "url": "https://gh-proxy.com/raw.githubusercontent.com/gaotianliuyun/gao/master/XYQ.json",
-      "desc": "type=3；2026-10-17 验证通过(达 stage 1)；延迟 68ms；49 站点"
     },
     {
       "name": "王二小",
@@ -41,6 +31,16 @@
       "name": "肥猫",
       "url": "http://肥猫.net/tv",
       "desc": "type=3；2026-10-17 验证通过(HTTP 200，40 站点)；延迟 1902ms"
+    },
+    {
+      "name": "豆瓣┃[js]",
+      "url": "https://github.com/Dong-learn9/TVBox-zyjk/raw/main/tvbox2.json",
+      "desc": "type=1；2026-11-01 验证通过(达 stage 4)；延迟 4301ms；43 站点"
+    },
+    {
+      "name": "1-艾旦",
+      "url": "https://github.com/anaer/Meow/raw/main/meow.json",
+      "desc": "type=1；2026-11-01 验证通过(达 stage 4)；延迟 136570ms；77 站点"
     }
   ]
 }
