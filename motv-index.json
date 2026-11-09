@@ -33,8 +33,8 @@
       "desc": "type=3；2026-10-17 验证通过(HTTP 200，40 站点)；延迟 1902ms"
     },
     {
-      "name": "豆瓣┃[js]",
-      "url": "https://github.com/Dong-learn9/TVBox-zyjk/raw/main/tvbox2.json",
+      "name": "LLB",
+      "url": "https://raw.liucn.cc/box/m.json",
       "desc": "type=1；2026-11-01 验证通过(达 stage 4)；延迟 4301ms；43 站点"
     },
     {
